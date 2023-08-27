@@ -4,20 +4,37 @@ const path = require('path');
 const { exec } = require('child_process');
 
 function getScripts() {
-    const scriptFiles = fs.readdirSync('./scripts');
-    if (!scriptFiles.length) console.log('Cannot find any scripts in ./scripts directory.');
+    if (!fs.existsSync('scripts')) {
+        fs.mkdirSync('scripts');
+    }
+    const scriptFiles = fs.readdirSync('scripts');
+    if (!scriptFiles.length) console.log('Cannot find any scripts in scripts directory.');
     return scriptFiles;
 }
 
 function getIndexPage() {
     const scripts = getScripts();
-    const buttons = scripts.map(s => `<button onclick="fetch('/${s}')">${path.parse(s).name}</button>`)
+    const buttons = scripts.map(s => `
+        <button 
+            onclick="fetch('/${s}')"
+            style="
+                min-width: 100px;
+                max-height: 50px;
+                margin: 10px;
+                text-transform: uppercase;
+                border: none;
+                border-radius: 5px;
+                background-color: lawngreen;
+            ">
+            ${path.parse(s).name}
+        </button>`)
+
     return `
     <html>
         <head>
             <title>REST Remote Control</title>
         </head>
-        <body>
+        <body style="display: flex">
             ${buttons.join('\n')}
         </body>
     </html>`
@@ -40,11 +57,11 @@ const server = http.createServer((req, res) => {
         return;
     }
     try {
-        exec(`./scripts/${param}`, console.log);
+        exec(path.join('scripts', param), console.log);
     } catch (e) {
-        console.log(e);
+        console.log(e.message);
     }
     res.writeHead(200);
     res.end();
 });
-server.listen(port, 'localhost', () => { console.log(`Server is listening at http://localhost:${port}`); });
+server.listen(port, () => { console.log(`Server is listening at http://0.0.0.0:${port}`); });
